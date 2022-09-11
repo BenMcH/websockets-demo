@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+
+<body>
+	<section style="display: flex; flex-direction: column;" id="game">
+		<p id="question"></p>
+		<p id="submitted"></p>
+		<form id="answers">
+		</form>
+	</section>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		var socket = io();
+		const questionElement = document.querySelector('#question');
+		const submitted = document.querySelector('#submitted');
+		const form = document.querySelector('form#answers');
+
+		socket.on('submitted', (arg) => {
+			submitted.textContent = `Submitted: ${arg}`
+		})
+
+		socket.on('question', (question, ...answers) => {
+			questionElement.textContent = question;
+			form.innerHTML = ''
+
+			answers.forEach((answer) => {
+				const element = document.createElement('button');
+
+				element.type = 'submit'
+				element.value = answer;
+				element.innerText = answer;
+
+				form.appendChild(element);
+			})
+		})
+
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+
+			socket.emit('answer', event.submitter.value);
+		})
+	</script>
+</body>
+
+</html>
