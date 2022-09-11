@@ -13,12 +13,16 @@ let scores = {}
 let answers = {}
 
 io.on('connection', (socket) => {
+	let question = {
+		question: 'What is your favorite color?',
+		answers: ['red', 'blue', 'green']
+	}
 	scores[socket.id] = {
 		score: 0,
 		nickname: randomName()
 	}
 
-	socket.emit('question', 'What is your favorite color?', 'red', 'green', 'blue')
+	socket.emit('question', question)
 
 	const player = scores[socket.id];
 
@@ -33,6 +37,10 @@ io.on('connection', (socket) => {
 		io.emit('message', `${player.nickname}: ${message}`)
 	});
 
+	socket.on("adminload", (message) => {
+		socket.emit('current_question', question)
+	});
+
 	socket.on('disconnect', () => {
 		delete scores[socket.id]
 	})
@@ -45,6 +53,10 @@ io.on('connection', (socket) => {
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(__dirname + '/admin.html');
 });
 
 
