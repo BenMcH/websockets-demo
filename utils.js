@@ -48,4 +48,4 @@ export const randomName = () => {
 	return `${random(adjectives)}${random(nouns)}`;
 }
 
-const random = (array) => array[Math.floor(Math.random() * array.length)];
+export const random = (array) => array[Math.floor(Math.random() * array.length)];

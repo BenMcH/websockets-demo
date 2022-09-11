@@ -1,7 +1,8 @@
 import express from 'express';
 import http from 'http';
-import {Server} from 'socket.io';
-import { __dirname, randomName } from './utils.js';
+import { Server } from 'socket.io';
+import { questions } from './questions.js';
+import { __dirname, randomName, random } from './utils.js';
 
 const app = express();
 
@@ -11,6 +12,7 @@ const io = new Server(server);
 
 let scores = {}
 let answers = {}
+let gameTimer;
 
 let question = {
 	question: 'What is your favorite color?',
@@ -36,7 +38,12 @@ io.on('connection', (socket) => {
 
 	socket.on('new_question', (_question) => {
 		question = _question
-		io.emit('question', question)
+		answers = {}
+
+		let questionSansAnswer = { ...question }
+		delete questionSansAnswer.answer;
+
+		io.emit('question', questionSansAnswer)
 	})
 
 	socket.on("message", (message) => {
@@ -51,17 +58,40 @@ io.on('connection', (socket) => {
 		answers[player.nickname] = ans
 		io.emit('submitted', Object.keys(answers).join(', '))
 	})
+
+	socket.on('new_game', (ans) => {
+		console.log('here');
+		clearTimeout(gameTimer)
+		answers = {}
+		Object.values(scores).forEach(score => score.score = 0)
+		io.emit('submitted', Object.keys(answers).join(', '))
+
+		gameTimer = setTimeout(nextQuestion, 1000)
+	})
+
 })
 
+const nextQuestion = () => {
+	question = random(questions)
+
+	let questionSansAnswer = { ...question }
+	delete questionSansAnswer.answer;
+	io.emit('question', question)
+	answers = {}
+	io.emit('submitted', Object.keys(answers).join(', '))
+
+	gameTimer = setTimeout(nextQuestion, 10_000)
+}
+
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+	res.sendFile(__dirname + '/index.html');
 });
 
 app.get('/admin', (req, res) => {
-  res.sendFile(__dirname + '/admin.html');
+	res.sendFile(__dirname + '/admin.html');
 });
 
 
 server.listen(3000, () => {
-  console.log('listening on http://localhost:3000');
+	console.log('listening on http://localhost:3000');
 });
