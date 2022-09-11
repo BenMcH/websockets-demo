@@ -17,10 +17,11 @@
 	</section>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
-		var socket = io();
 		const questionElement = document.querySelector('#question');
 		const submitted = document.querySelector('#submitted');
 		const form = document.querySelector('form#answers');
+
+		let socket = io();
 
 		socket.on('submitted', (arg) => {
 			submitted.textContent = `Submitted: ${arg}`

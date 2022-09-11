@@ -12,11 +12,12 @@ const io = new Server(server);
 let scores = {}
 let answers = {}
 
+let question = {
+	question: 'What is your favorite color?',
+	answers: ['red', 'blue', 'green']
+}
+
 io.on('connection', (socket) => {
-	let question = {
-		question: 'What is your favorite color?',
-		answers: ['red', 'blue', 'green']
-	}
 	scores[socket.id] = {
 		score: 0,
 		nickname: randomName()
@@ -33,12 +34,13 @@ io.on('connection', (socket) => {
 		console.log(`connect_error due to ${err.message}`);
 	});
 
+	socket.on('new_question', (_question) => {
+		question = _question
+		io.emit('question', question)
+	})
+
 	socket.on("message", (message) => {
 		io.emit('message', `${player.nickname}: ${message}`)
-	});
-
-	socket.on("adminload", (message) => {
-		socket.emit('current_question', question)
 	});
 
 	socket.on('disconnect', () => {
@@ -61,5 +63,5 @@ app.get('/admin', (req, res) => {
 
 
 server.listen(3000, () => {
-  console.log('listening on *:3000');
+  console.log('listening on http://localhost:3000');
 });

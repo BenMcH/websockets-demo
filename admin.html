@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+
+<body>
+	<section style="display: flex; flex-direction: column;" id="game">
+		<form>
+			<input type="text" name="question"></input>
+			<input type="text" name="ans_1"></input>
+			<input type="text" name="ans_2"></input>
+			<input type="text" name="ans_3"></input>
+			<input type="text" name="ans_4"></input>
+			<button type="submit">Update question</button>
+		</form>
+	</section>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		const questionElement = document.querySelector('[name=question]');
+		const answerElements = [
+			document.querySelector('[name=ans_1]'),
+			document.querySelector('[name=ans_2]'),
+			document.querySelector('[name=ans_3]'),
+			document.querySelector('[name=ans_4]')
+		]
+
+		const form = document.querySelector('form');
+
+		let socket = io();
+
+		socket.on('question', ({ question, answers }) => {
+			questionElement.value = question;
+
+			answers.forEach((answer, i) => {
+				const element = answerElements[i];
+
+				element.value = answer;
+			})
+		})
+
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+
+			socket.emit('new_question', { question: questionElement.value, answers: answerElements.map((e) => e.value) });
+		})
+	</script>
+</body>
+
+</html>
