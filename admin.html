@@ -18,6 +18,7 @@
 			<input type="text" name="ans_4"></input>
 			<button type="submit">Update question</button>
 			<button name="new_game" type="button">New Game</button>
+			<button name="stop_game" type="button">Stop Game</button>
 		</form>
 	</section>
 	<script src="/socket.io/socket.io.js"></script>
@@ -51,8 +52,8 @@
 			socket.emit('new_question', { question: questionElement.value, answers: answerElements.map((e) => e.value).filter(val => val) });
 		})
 
-		newGameButton.addEventListener('click', (event) => {
-			socket.emit('new_game')
+		document.querySelectorAll('form>button[type=button]').forEach(btn => {
+			btn.addEventListener('click', () => socket.emit(btn.getAttribute('name')))
 		})
 	</script>
 </body>

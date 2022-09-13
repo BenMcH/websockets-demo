@@ -66,16 +66,27 @@ io.on('connection', (socket) => {
 		Object.values(scores).forEach(score => score.score = 0)
 		io.emit('submitted', Object.keys(answers).join(', '))
 
-		gameTimer = setTimeout(nextQuestion, 1000)
+		gameTimer = setTimeout(nextQuestion, 1_000)
+	})
+
+	socket.on('stop_game', () => {
+		clearTimeout(gameTimer)
 	})
 
 })
 
-const nextQuestion = () => {
+const nextQuestion = async () => {
+	console.log("results:")
+	console.log(Object.entries(answers).filter(([_, answer]) => answer === question.answer).map(([name]) => name))
+
+	await new Promise((resolve) => setTimeout(resolve, 5_000))
+
 	question = random(questions)
 
 	let questionSansAnswer = { ...question }
 	delete questionSansAnswer.answer;
+
+
 	io.emit('question', question)
 	answers = {}
 	io.emit('submitted', Object.keys(answers).join(', '))
