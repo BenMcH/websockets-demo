@@ -13,6 +13,7 @@ const io = new Server(server);
 let scores = {}
 let answers = {}
 let gameTimer;
+let continueGame;
 
 let question = {
 	question: 'What is your favorite color?',
@@ -57,29 +58,33 @@ io.on('connection', (socket) => {
 
 	socket.on('answer', (ans) => {
 		answers[player.nickname] = ans
-		io.emit('submitted', Object.keys(answers).join(', '))
+
+		emitSubmitted();
 	})
 
 	socket.on('new_game', (ans) => {
-		console.log('here');
 		clearTimeout(gameTimer)
+		continueGame = true;
 		answers = {}
 		Object.values(scores).forEach(score => score.score = 0)
-		io.emit('submitted', Object.keys(answers).join(', '))
+		emitSubmitted();
 
 		gameTimer = setTimeout(nextQuestion, 1_000)
 	})
 
 	socket.on('stop_game', () => {
+		continueGame = false;
 		clearTimeout(gameTimer)
 	})
-
 })
 
-const nextQuestion = async () => {
-	console.log("results:")
-	console.log(Object.entries(answers).filter(([_, answer]) => answer === question.answer).map(([name]) => name))
+const emitSubmitted = () => io.emit('submitted', `Submitted: ${Object.keys(answers).join(', ')}`)
 
+const nextQuestion = async () => {
+	const winners = Object.entries(answers).filter(([_, answer]) => answer === question.answer).map(([name]) => name).join(', ')
+
+	io.emit('submitted', `Answer: ${question.answer}
+	Congrats: ${winners}!`)
 	await new Promise((resolve) => setTimeout(resolve, 5_000))
 
 	question = random(questions)
@@ -88,11 +93,13 @@ const nextQuestion = async () => {
 	delete questionSansAnswer.answer;
 
 
-	io.emit('question', question)
-	answers = {}
-	io.emit('submitted', Object.keys(answers).join(', '))
+	if (continueGame) {
+		io.emit('question', question)
+		answers = {}
+		emitSubmitted()
 
-	gameTimer = setTimeout(nextQuestion, 10_000)
+		gameTimer = setTimeout(nextQuestion, 10_000)
+	}
 }
 
 app.get('/', (req, res) => {
