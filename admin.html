@@ -10,49 +10,15 @@
 
 <body>
 	<section style="display: flex; flex-direction: column;" id="game">
-		<form>
-			<input type="text" name="question"></input>
-			<input type="text" name="ans_1"></input>
-			<input type="text" name="ans_2"></input>
-			<input type="text" name="ans_3"></input>
-			<input type="text" name="ans_4"></input>
-			<button type="submit">Update question</button>
-			<button name="new_game" type="button">New Game</button>
-			<button name="stop_game" type="button">Stop Game</button>
-		</form>
+		<button name="new_game" type="button">New Game</button>
+		<button name="stop_game" type="button">Stop Game</button>
 	</section>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
-		const questionElement = document.querySelector('[name=question]');
-		const answerElements = [
-			document.querySelector('[name=ans_1]'),
-			document.querySelector('[name=ans_2]'),
-			document.querySelector('[name=ans_3]'),
-			document.querySelector('[name=ans_4]')
-		]
-		const newGameButton = document.querySelector('button[name=new_game]')
-
-		const form = document.querySelector('form');
 
 		let socket = io();
 
-		socket.on('question', ({ question, answers }) => {
-			questionElement.value = question;
-
-			answers.forEach((answer, i) => {
-				const element = answerElements[i];
-
-				element.value = answer;
-			})
-		})
-
-		form.addEventListener('submit', (event) => {
-			event.preventDefault();
-
-			socket.emit('new_question', { question: questionElement.value, answers: answerElements.map((e) => e.value).filter(val => val) });
-		})
-
-		document.querySelectorAll('form>button[type=button]').forEach(btn => {
+		document.querySelectorAll('button[type=button]').forEach(btn => {
 			btn.addEventListener('click', () => socket.emit(btn.getAttribute('name')))
 		})
 	</script>
