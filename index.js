@@ -25,9 +25,10 @@ io.on('connection', (socket) => {
 		nickname: randomName()
 	}
 
-	socket.emit('question', question)
-
 	const player = scores[socket.id];
+
+	socket.emit('message', `Welcome, ${player.nickname}`);
+	socket.emit('question', question)
 
 	socket.emit('nickname', player.nickname);
 	io.emit('new_user', player.nickname);
