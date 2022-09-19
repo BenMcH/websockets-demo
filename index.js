@@ -38,16 +38,6 @@ io.on('connection', (socket) => {
 		console.log(`connect_error due to ${err.message}`);
 	});
 
-	socket.on('new_question', (_question) => {
-		question = _question
-		answers = {}
-
-		let questionSansAnswer = { ...question }
-		delete questionSansAnswer.answer;
-
-		io.emit('question', questionSansAnswer)
-	})
-
 	socket.on("message", (message) => {
 		io.emit('message', `${player.nickname}: ${message}`)
 	});
@@ -73,31 +63,54 @@ io.on('connection', (socket) => {
 	})
 
 	socket.on('stop_game', () => {
-		continueGame = false;
-		clearTimeout(gameTimer)
+		finishGame()
 	})
 })
 
 const emitSubmitted = () => io.emit('submitted', `Submitted: ${Object.keys(answers).join(', ')}`)
 
-const nextQuestion = async () => {
-	question = random(questions)
+const finishGame = () => {
+	continueGame = false;
+	clearTimeout(gameTimer)
 
-	let questionSansAnswer = { ...question }
-	delete questionSansAnswer.answer;
+	const scoreMapping = Object.values(scores).reduce((acc, value) => {
+		acc[value.nickname] = value.score
 
-	io.emit('question', question)
-	answers = {}
-	emitSubmitted()
+		return acc
+	}, {})
+	console.log({ scoreMapping })
+	io.emit('scoreboard', scoreMapping)
 
-	await new Promise((resolve) => setTimeout(resolve, 10_000))
+	return;
+}
 
-	const winners = Object.entries(answers).filter(([_, answer]) => answer === question.answer).map(([name]) => name).join(', ')
+const nextQuestion = async (count = 0) => {
+	if (count > 4) {
+		return finishGame();
+	} else {
+		question = random(questions)
 
-	io.emit('submitted', `Answer: ${question.answer} Congrats: ${winners}!`)
+		let questionSansAnswer = { ...question }
+		delete questionSansAnswer.answer;
 
-	if (continueGame) {
-		gameTimer = setTimeout(nextQuestion, 5_000)
+		io.emit('question', question)
+		answers = {}
+		emitSubmitted()
+
+		await new Promise((resolve) => setTimeout(resolve, 10_000))
+
+		const winnerNames = Object.entries(answers).filter(([_, answer]) => answer === question.answer).map(([name]) => name)
+		const winners = winnerNames.join(",")
+
+		io.emit('submitted', `Answer: ${question.answer} Congrats: ${winners}!`)
+
+		winnerNames.forEach(name => {
+			Object.values(scores).find(({ nickname }) => nickname === name).score += 1
+		})
+
+		if (continueGame) {
+			gameTimer = setTimeout(nextQuestion.bind(null, count + 1), 5_000)
+		}
 	}
 }
 

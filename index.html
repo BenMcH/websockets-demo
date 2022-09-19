@@ -67,6 +67,21 @@
 			document.querySelector('#message').innerText = message
 		});
 
+		socket.on('scoreboard', (scoreboard) => {
+			form.innerHTML = ''
+
+			const list = document.createElement('ol')
+
+			Object.entries(scoreboard).sort((a, b) => b[1] - a[1]).forEach(([name, score]) => {
+				const entry = document.createElement('li')
+
+				entry.textContent = `${name}: ${score}`
+
+				list.appendChild(entry)
+			})
+
+			form.appendChild(list)
+		})
 		socket.on('question', ({ question, answers }) => {
 			questionElement.textContent = question;
 			form.innerHTML = ''
