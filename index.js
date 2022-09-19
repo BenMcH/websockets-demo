@@ -14,6 +14,7 @@ let scores = {}
 let answers = {}
 let gameTimer;
 let continueGame;
+let allowAnswers = false;
 
 let question = {
 	question: 'What is your favorite color?',
@@ -47,9 +48,11 @@ io.on('connection', (socket) => {
 	})
 
 	socket.on('answer', (ans) => {
-		answers[player.nickname] = ans
+		if (allowAnswers) {
+			answers[player.nickname] = ans
 
-		emitSubmitted();
+			emitSubmitted();
+		}
 	})
 
 	socket.on('new_game', (ans) => {
@@ -78,7 +81,6 @@ const finishGame = () => {
 
 		return acc
 	}, {})
-	console.log({ scoreMapping })
 	io.emit('scoreboard', scoreMapping)
 
 	return;
@@ -94,10 +96,13 @@ const nextQuestion = async (count = 0) => {
 		delete questionSansAnswer.answer;
 
 		io.emit('question', question)
+		allowAnswers = true
 		answers = {}
 		emitSubmitted()
 
 		await new Promise((resolve) => setTimeout(resolve, 10_000))
+
+		allowAnswers = false
 
 		const winnerNames = Object.entries(answers).filter(([_, answer]) => answer === question.answer).map(([name]) => name)
 		const winners = winnerNames.join(",")
